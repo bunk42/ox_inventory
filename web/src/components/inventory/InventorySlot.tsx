@@ -108,11 +108,17 @@ const InventorySlot: React.ForwardRefRenderFunction<HTMLDivElement, SlotProps> =
   };
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // Only allow left and middle click
+    if (![0, 1].includes(event.button)) return
+
     dispatch(closeTooltip());
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (event.ctrlKey && isSlotWithItem(item) && inventoryType !== 'shop' && inventoryType !== 'crafting') {
+    if (event.button === 0 && event.ctrlKey && isSlotWithItem(item) && inventoryType !== 'shop' && inventoryType !== 'crafting') {
+      // Control click compat (left click only)
       onDrop({ item: item, inventory: inventoryType });
-    } else if (event.altKey && isSlotWithItem(item) && inventoryType === 'player') {
+    } else if (event.button === 1 && isSlotWithItem(item) && inventoryType === 'player') {
+      // Middle click to use item
+      event.preventDefault();
       onUse(item);
     }
   };
@@ -123,7 +129,7 @@ const InventorySlot: React.ForwardRefRenderFunction<HTMLDivElement, SlotProps> =
     <div
       ref={refs}
       onContextMenu={handleContext}
-      onClick={handleClick}
+      onMouseDown={handleClick}
       className="inventory-slot"
       style={{
         filter:
@@ -160,14 +166,11 @@ const InventorySlot: React.ForwardRefRenderFunction<HTMLDivElement, SlotProps> =
             <div className="item-slot-info-wrapper">
               <p>
                 {item.weight > 0
-                  ? item.weight >= 1000
-                    ? `${(item.weight / 1000).toLocaleString('en-us', {
-                        minimumFractionDigits: 2,
-                      })}kg `
-                    : `${item.weight.toLocaleString('en-us', {
-                        minimumFractionDigits: 0,
-                      })}g `
-                  : ''}
+                  ? `${(item.weight / 1000).toLocaleString('en-us', {
+                      minimumFractionDigits: 2,
+                    })}kg `
+                  : ``
+                }
               </p>
               <p>{item.count ? item.count.toLocaleString('en-us') + `x` : ''}</p>
             </div>
